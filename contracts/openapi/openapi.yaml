@@ -1,0 +1,226 @@
+openapi: 3.1.0
+info:
+  title: DayPI API
+  version: 0.1.0-phase0
+  description: >
+    Implemented Phase 0 foundation routes only. Commercial and regulatory
+    behaviours gated by D01–D12 remain disabled or synthetic-only.
+servers:
+  - url: http://localhost:3001/v1
+    description: Local API (final hostname Pending D02)
+tags:
+  - name: Platform
+  - name: Auth
+  - name: Tenants
+  - name: Sites
+  - name: Memberships
+  - name: Children
+  - name: Files
+  - name: Usage
+security:
+  - bearerAuth: []
+  - sessionCookie: []
+paths:
+  /health:
+    get:
+      tags: [Platform]
+      security: []
+      summary: Liveness
+      responses:
+        '200':
+          description: OK
+  /ready:
+    get:
+      tags: [Platform]
+      security: []
+      summary: Readiness
+      responses:
+        '200':
+          description: Ready
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Password login
+      responses:
+        '200':
+          description: Session issued
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: End session
+      responses:
+        '204':
+          description: Logged out
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Current user and memberships
+      responses:
+        '200':
+          description: Profile
+  /auth/tenant/select:
+    post:
+      tags: [Auth]
+      summary: Select active tenant workspace
+      responses:
+        '200':
+          description: Workspace selected
+  /tenants/current:
+    get:
+      tags: [Tenants]
+      summary: Active tenant profile
+      responses:
+        '200':
+          description: Tenant
+    patch:
+      tags: [Tenants]
+      summary: Update active tenant (owner)
+      responses:
+        '200':
+          description: Updated
+  /sites:
+    get:
+      tags: [Sites]
+      summary: List sites
+      responses:
+        '200':
+          description: Sites page
+    post:
+      tags: [Sites]
+      summary: Create site
+      responses:
+        '201':
+          description: Created
+  /sites/{siteId}:
+    get:
+      tags: [Sites]
+      summary: Get site
+      parameters:
+        - name: siteId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Site
+  /memberships:
+    get:
+      tags: [Memberships]
+      summary: List memberships
+      responses:
+        '200':
+          description: Memberships
+  /memberships/invitations:
+    post:
+      tags: [Memberships]
+      summary: Invite user
+      responses:
+        '201':
+          description: Invitation created
+  /memberships/{id}:
+    delete:
+      tags: [Memberships]
+      summary: Revoke membership
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204':
+          description: Revoked
+  /integration-clients:
+    get:
+      tags: [Memberships]
+      summary: List integration clients
+      responses:
+        '200':
+          description: Clients
+    post:
+      tags: [Memberships]
+      summary: Create integration client (secret once)
+      responses:
+        '201':
+          description: Created
+  /children:
+    get:
+      tags: [Children]
+      summary: List children visible to caller
+      responses:
+        '200':
+          description: Children page
+    post:
+      tags: [Children]
+      summary: Create child in active tenant
+      responses:
+        '201':
+          description: Created
+  /children/{childId}:
+    get:
+      tags: [Children]
+      summary: Get child if authorised
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Child
+        '403':
+          description: Forbidden
+  /files:
+    post:
+      tags: [Files]
+      summary: Upload private object (base64 stub)
+      responses:
+        '201':
+          description: Stored
+  /files/{id}:
+    get:
+      tags: [Files]
+      summary: Authorised short-lived download metadata
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Download descriptor
+  /usage/account:
+    get:
+      tags: [Usage]
+      summary: Usage account (ledger empty until grants approved)
+      responses:
+        '200':
+          description: Account
+  /audit-events:
+    get:
+      tags: [Tenants]
+      summary: Recent audit events for active tenant
+      responses:
+        '200':
+          description: Events
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: daypi_session
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object, additionalProperties: true }
