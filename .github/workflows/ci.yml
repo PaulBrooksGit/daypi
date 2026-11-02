@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'cursor/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      NODE_ENV: test
+      SESSION_SECRET: ci-session-secret-at-least-16
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      CORS_ORIGINS: http://localhost:3000
+      STORAGE_LOCAL_ROOT: ./.data/test-storage
+      DATABASE_URL: postgresql://daypi_app:daypi_app_dev@127.0.0.1:5432/daypi_test
+      MIGRATION_DATABASE_URL: postgresql://daypi_migrator:daypi_migrator_dev@127.0.0.1:5432/daypi_test
+      TEST_DATABASE_URL: postgresql://daypi_app:daypi_app_dev@127.0.0.1:5432/daypi_test
+      TEST_MIGRATION_DATABASE_URL: postgresql://daypi_migrator:daypi_migrator_dev@127.0.0.1:5432/daypi_test
+      TEST_POSTGRES_URL: postgresql://postgres:postgres@127.0.0.1:5432/daypi_test
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Create database roles
+        env:
+          TEST_POSTGRES_URL: postgresql://postgres:postgres@127.0.0.1:5432/daypi_test
+        run: |
+          PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres <<'SQL'
+          CREATE USER daypi_migrator WITH PASSWORD 'daypi_migrator_dev' LOGIN;
+          CREATE USER daypi_app WITH PASSWORD 'daypi_app_dev' LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+          CREATE DATABASE daypi_test OWNER daypi_migrator;
+          \c daypi_test
+          GRANT CONNECT ON DATABASE daypi_test TO daypi_app;
+          GRANT USAGE ON SCHEMA public TO daypi_app;
+          GRANT CREATE ON SCHEMA public TO daypi_migrator;
+          ALTER DEFAULT PRIVILEGES FOR ROLE daypi_migrator IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO daypi_app;
+          ALTER DEFAULT PRIVILEGES FOR ROLE daypi_migrator IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO daypi_app;
+          CREATE EXTENSION IF NOT EXISTS citext;
+          CREATE EXTENSION IF NOT EXISTS pgcrypto;
+          SQL
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Dependency audit (non-blocking report)
+        run: npm audit --omit=dev || true
