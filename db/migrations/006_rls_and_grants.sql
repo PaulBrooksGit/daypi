@@ -23,10 +23,15 @@ DECLARE
     'stored_objects',
     'outbox_events'
   ];
+  -- outbox_events: ENABLE RLS for daypi_app, but do NOT FORCE — table-owner
+  -- SECURITY DEFINER claim/complete helpers must bypass before per-job tenant context.
+  no_force text[] := ARRAY['outbox_events'];
 BEGIN
   FOREACH t IN ARRAY tenant_tables LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
-    EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);
+    IF NOT (t = ANY (no_force)) THEN
+      EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);
+    END IF;
     EXECUTE format('DROP POLICY IF EXISTS tenant_isolation ON %I', t);
     EXECUTE format(
       'CREATE POLICY tenant_isolation ON %I

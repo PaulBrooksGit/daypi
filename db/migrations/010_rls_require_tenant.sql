@@ -31,6 +31,8 @@ BEGIN
       t
     );
   END LOOP;
+  -- Keep claim path viable: owner SECURITY DEFINER must not be FORCEd.
+  ALTER TABLE outbox_events NO FORCE ROW LEVEL SECURITY;
 END $$;
 
 DROP POLICY IF EXISTS audit_tenant_isolation ON audit_events;
