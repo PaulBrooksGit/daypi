@@ -1,10 +1,12 @@
 openapi: 3.1.0
 info:
   title: DayPI API
-  version: 0.1.0-phase0
+  version: 0.2.0-phase1
   description: >
-    Implemented Phase 0 foundation routes only. Commercial and regulatory
-    behaviours gated by D01–D12 remain disabled or synthetic-only.
+    Implemented Phase 0 foundation plus Phase 1 DayCore / DayByte / DayTeam
+    minimum routes. Commercial and regulatory behaviours gated by D01–D12
+    remain disabled or synthetic-only. No live billing, auctions, payroll,
+    consequential AI, or Hostinger configuration.
 servers:
   - url: http://localhost:3001/v1
     description: Local API (final hostname Pending D02)
@@ -15,6 +17,13 @@ tags:
   - name: Sites
   - name: Memberships
   - name: Children
+  - name: Guardians
+  - name: Enrolments
+  - name: Sessions
+  - name: Bookings
+  - name: Attendance
+  - name: Staff
+  - name: ImportExport
   - name: Files
   - name: Usage
 security:
@@ -170,6 +179,314 @@ paths:
           description: Child
         '403':
           description: Forbidden
+    patch:
+      tags: [Children]
+      summary: Update child (optimistic version)
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updated
+  /children/{childId}/archive:
+    post:
+      tags: [Children]
+      summary: Soft-archive child
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Archived
+  /children/{childId}/guardians/{guardianId}:
+    put:
+      tags: [Guardians]
+      summary: Upsert child–guardian relationship
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: guardianId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Relationship
+    delete:
+      tags: [Guardians]
+      summary: Revoke child–guardian relationship
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: guardianId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204':
+          description: Revoked
+  /guardians:
+    get:
+      tags: [Guardians]
+      summary: List guardians
+      responses:
+        '200':
+          description: Guardians page
+    post:
+      tags: [Guardians]
+      summary: Create guardian
+      responses:
+        '201':
+          description: Created
+  /guardians/{guardianId}:
+    get:
+      tags: [Guardians]
+      summary: Get guardian
+      parameters:
+        - name: guardianId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Guardian
+  /enquiries:
+    get:
+      tags: [Enrolments]
+      summary: List enquiries
+      responses:
+        '200':
+          description: Enquiries
+    post:
+      tags: [Enrolments]
+      summary: Create enquiry
+      responses:
+        '201':
+          description: Created
+  /enquiries/{enquiryId}:
+    patch:
+      tags: [Enrolments]
+      summary: Update enquiry status
+      parameters:
+        - name: enquiryId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updated
+  /enrolments:
+    get:
+      tags: [Enrolments]
+      summary: List enrolments
+      responses:
+        '200':
+          description: Enrolments
+    post:
+      tags: [Enrolments]
+      summary: Create enrolment
+      responses:
+        '201':
+          description: Created
+  /enrolments/{enrolmentId}/end:
+    post:
+      tags: [Enrolments]
+      summary: End enrolment
+      parameters:
+        - name: enrolmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Ended
+  /session-definitions:
+    get:
+      tags: [Sessions]
+      summary: List session definitions
+      responses:
+        '200':
+          description: Definitions
+    post:
+      tags: [Sessions]
+      summary: Define session template
+      responses:
+        '201':
+          description: Created
+  /dated-sessions:
+    get:
+      tags: [Sessions]
+      summary: List dated sessions with occupancy
+      responses:
+        '200':
+          description: Dated sessions
+    post:
+      tags: [Sessions]
+      summary: Materialise dated session
+      responses:
+        '201':
+          description: Created
+  /dated-sessions/{datedSessionId}:
+    get:
+      tags: [Sessions]
+      summary: Get dated session
+      parameters:
+        - name: datedSessionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Dated session
+  /bookings:
+    get:
+      tags: [Bookings]
+      summary: List bookings (parents see linked children only)
+      responses:
+        '200':
+          description: Bookings
+    post:
+      tags: [Bookings]
+      summary: Create booking (parents request; staff confirm immediately)
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          schema: { type: string, maxLength: 128 }
+      responses:
+        '201':
+          description: Created
+        '409':
+          description: Capacity conflict or duplicate
+  /bookings/{bookingId}/confirm:
+    post:
+      tags: [Bookings]
+      summary: Confirm a requested booking under transactional capacity lock
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Confirmed
+        '409':
+          description: No capacity
+  /bookings/{bookingId}/cancel:
+    post:
+      tags: [Bookings]
+      summary: Cancel booking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Cancelled
+  /reservations:
+    post:
+      tags: [Bookings]
+      summary: Create expiring capacity hold
+      responses:
+        '201':
+          description: Holding
+        '409':
+          description: No capacity
+  /registers/{datedSessionId}:
+    get:
+      tags: [Attendance]
+      summary: Operational register with staff on duty
+      parameters:
+        - name: datedSessionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Register
+  /attendance/check-in:
+    post:
+      tags: [Attendance]
+      summary: Check child in
+      responses:
+        '201':
+          description: Checked in
+  /attendance/check-out:
+    post:
+      tags: [Attendance]
+      summary: Check child out (authorised collector verified when provided)
+      responses:
+        '201':
+          description: Checked out
+  /attendance/{attendanceEventId}/corrections:
+    post:
+      tags: [Attendance]
+      summary: Append-only attendance correction
+      parameters:
+        - name: attendanceEventId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Correction applied
+  /staff:
+    get:
+      tags: [Staff]
+      summary: List staff profiles
+      responses:
+        '200':
+          description: Staff
+    post:
+      tags: [Staff]
+      summary: Create staff profile
+      responses:
+        '201':
+          description: Created
+  /rota/shifts:
+    get:
+      tags: [Staff]
+      summary: List planned rota shifts
+      responses:
+        '200':
+          description: Shifts
+    post:
+      tags: [Staff]
+      summary: Create planned rota shift
+      responses:
+        '201':
+          description: Created
+  /time-events:
+    post:
+      tags: [Staff]
+      summary: Record actual time event (separate from rota)
+      responses:
+        '201':
+          description: Recorded
+  /export/children:
+    get:
+      tags: [ImportExport]
+      summary: Export children + guardian links (pilot)
+      responses:
+        '200':
+          description: Bundle
+  /import/children:
+    post:
+      tags: [ImportExport]
+      summary: Import children bundle (supports dry_run)
+      responses:
+        '200':
+          description: Dry-run result
+        '201':
+          description: Imported
   /files:
     post:
       tags: [Files]

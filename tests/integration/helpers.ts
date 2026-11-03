@@ -18,12 +18,15 @@ export interface Fixtures {
   app: Express;
   tenantA: string;
   tenantB: string;
+  siteA: string;
+  siteB: string;
   ownerA: { id: string; email: string; password: string };
   ownerB: { id: string; email: string; password: string };
   parentA: { id: string; email: string; password: string };
   childA1: string;
   childA2: string;
   childB1: string;
+  guardianA: string;
   integrationTokenA: string;
 }
 
@@ -202,12 +205,15 @@ export async function setupFixtures(): Promise<Fixtures> {
       app,
       tenantA: tenantA.tenantId,
       tenantB: tenantB.tenantId,
+      siteA: tenantA.siteId,
+      siteB: tenantB.siteId,
       ownerA: { id: ownerA.rows[0]!.id, email: 'owner-a@example.test', password },
       ownerB: { id: ownerB.rows[0]!.id, email: 'owner-b@example.test', password },
       parentA: { id: parentA.rows[0]!.id, email: 'parent-a@example.test', password },
       childA1: childA1.rows[0]!.id,
       childA2: childA2.rows[0]!.id,
       childB1: childB1.rows[0]!.id,
+      guardianA: guardian.rows[0]!.id,
       integrationTokenA: `client_${integ.rows[0]!.id}.${secret}`,
     };
   } catch (err) {
