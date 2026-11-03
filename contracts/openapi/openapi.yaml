@@ -1,12 +1,13 @@
 openapi: 3.1.0
 info:
   title: DayPI API
-  version: 0.2.0-phase1
+  version: 0.3.0-phase2
   description: >
-    Implemented Phase 0 foundation plus Phase 1 DayCore / DayByte / DayTeam
-    minimum routes. Commercial and regulatory behaviours gated by D01–D12
-    remain disabled or synthetic-only. No live billing, auctions, payroll,
-    consequential AI, or Hostinger configuration.
+    Phase 0–2 implemented surfaces: foundation, DayCore/DayByte/DayTeam minimum,
+    DayDocs, core DayBank (sandbox payments), and DayText. Commercial and
+    regulatory behaviours gated by D01–D12 remain disabled or synthetic-only.
+    No live Stripe Connect collection, auctions, payroll, consequential AI,
+    or Hostinger configuration.
 servers:
   - url: http://localhost:3001/v1
     description: Local API (final hostname Pending D02)
@@ -25,7 +26,13 @@ tags:
   - name: Staff
   - name: ImportExport
   - name: Files
+  - name: Documents
+  - name: Consents
+  - name: Invoices
+  - name: Payments
   - name: Usage
+  - name: Messages
+  - name: Webhooks
 security:
   - bearerAuth: []
   - sessionCookie: []
@@ -509,10 +516,257 @@ paths:
   /usage/account:
     get:
       tags: [Usage]
-      summary: Usage account (ledger empty until grants approved)
+      summary: Usage account derived balance
       responses:
         '200':
           description: Account
+  /usage/ledger:
+    get:
+      tags: [Usage]
+      summary: Usage ledger statement
+      responses:
+        '200':
+          description: Entries
+  /usage/top-ups:
+    post:
+      tags: [Usage]
+      summary: Sandbox purchase top-up (not promotional grant; live billing disabled)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Credited
+  /documents:
+    get:
+      tags: [Documents]
+      summary: List documents
+      responses:
+        '200':
+          description: Page
+    post:
+      tags: [Documents]
+      summary: Create document with initial version
+      responses:
+        '201':
+          description: Created
+  /documents/{documentId}:
+    get:
+      tags: [Documents]
+      summary: Get document and current version
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Document
+  /documents/{documentId}/versions:
+    get:
+      tags: [Documents]
+      summary: List immutable versions
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Versions
+    post:
+      tags: [Documents]
+      summary: Add new version (prior versions preserved)
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: New version
+  /document-versions/{versionId}:
+    get:
+      tags: [Documents]
+      summary: Retrieve a specific immutable version
+      parameters:
+        - name: versionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Version
+  /consents:
+    post:
+      tags: [Consents]
+      summary: Request consent against a document version
+      responses:
+        '201':
+          description: Created
+  /consents/{consentId}:
+    get:
+      tags: [Consents]
+      summary: Consent with signature evidence and frozen version
+      parameters:
+        - name: consentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Consent bundle
+  /consents/{consentId}/signatures:
+    post:
+      tags: [Consents]
+      summary: Sign consent (preserves signed version hash)
+      parameters:
+        - name: consentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Signature evidence
+  /billing-accounts:
+    post:
+      tags: [Invoices]
+      summary: Create childcare billing account
+      responses:
+        '201':
+          description: Created
+  /billing-accounts/{billingAccountId}/reconciliation:
+    get:
+      tags: [Invoices]
+      summary: Financial reconciliation for billing account
+      parameters:
+        - name: billingAccountId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Reconciliation
+  /invoices:
+    post:
+      tags: [Invoices]
+      summary: Draft invoice (pricing snapshot)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Drafted
+  /invoices/{invoiceId}:
+    get:
+      tags: [Invoices]
+      summary: Get invoice and lines
+      parameters:
+        - name: invoiceId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Invoice
+  /invoices/{invoiceId}/issue:
+    post:
+      tags: [Invoices]
+      summary: Issue invoice (immutable money fields thereafter)
+      parameters:
+        - name: invoiceId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Issued
+  /invoices/{invoiceId}/credits:
+    post:
+      tags: [Invoices]
+      summary: Credit issued invoice (amendment path)
+      parameters:
+        - name: invoiceId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Credited
+  /payments:
+    post:
+      tags: [Payments]
+      summary: Create Stripe sandbox payment attempt (live collection disabled)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Pending sandbox payment
+  /payments/{paymentId}:
+    get:
+      tags: [Payments]
+      summary: Get payment attempt
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Payment
+  /messages:
+    get:
+      tags: [Messages]
+      summary: Message history
+      responses:
+        '200':
+          description: Page
+    post:
+      tags: [Messages]
+      summary: Queue message (estimates cost; reserves usage credit for SMS)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Queued
+  /messages/{messageId}:
+    get:
+      tags: [Messages]
+      summary: Message with recipients and delivery state
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Message
+  /messages/{messageId}/sandbox-send:
+    post:
+      tags: [Messages]
+      summary: Process sandbox send immediately (dev/test helper)
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Sent
+  /webhooks/stripe:
+    post:
+      tags: [Webhooks]
+      security: []
+      summary: Stripe sandbox webhook (verify + dedupe)
+      responses:
+        '200':
+          description: Processed or duplicate
+  /webhooks/twilio:
+    post:
+      tags: [Webhooks]
+      security: []
+      summary: Twilio sandbox status webhook (verify + dedupe)
+      responses:
+        '200':
+          description: Processed or duplicate
   /audit-events:
     get:
       tags: [Tenants]
@@ -521,6 +775,12 @@ paths:
         '200':
           description: Events
 components:
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string, maxLength: 128 }
   securitySchemes:
     bearerAuth:
       type: http

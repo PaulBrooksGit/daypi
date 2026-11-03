@@ -1,2 +1,2 @@
-/** Module stub: messaging — Phase 0 placeholder; writes owned here in later phases. */
-export {};
+/** DayText — messaging with delivery tracking and marketing preference checks. */
+export * from './messages.js';

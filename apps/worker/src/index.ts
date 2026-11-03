@@ -1,6 +1,7 @@
 import { loadConfig } from '../../../platform/config/src/index.js';
 import { createPool, withTenant } from '../../../platform/db/src/index.js';
 import { OutboxWorker } from '../../../platform/jobs/src/index.js';
+import { sendMessageInTx } from '../../../modules/messaging/src/index.js';
 
 async function main() {
   const config = loadConfig();
@@ -22,6 +23,17 @@ async function main() {
             [objectId],
           );
         }, pool);
+      },
+      'messages.send_sandbox': async (event) => {
+        const messageId = (event.payload as { messageId?: string }).messageId;
+        if (!event.tenant_id || !messageId) return;
+        // Worker already wraps tenant context; call DB work via nested withTenant is fine.
+        await withTenant(event.tenant_id, async (db) => {
+          await sendMessageInTx(db, { tenantId: event.tenant_id!, messageId });
+        }, pool);
+      },
+      'payments.sandbox_intent_created': async () => {
+        /* Intent recorded; settlement arrives via Stripe sandbox webhook. */
       },
       'demo.fail_once': async (event) => {
         const attempts = event.attempt_count;

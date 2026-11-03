@@ -348,27 +348,6 @@ export function tenantRoutes(pool: DbPool): Router {
     },
   );
 
-  router.get(
-    '/usage/account',
-    requireAuth,
-    requireActiveTenant,
-    requireOperation('usage_ledger.read'),
-    async (req, res, next) => {
-      try {
-        const account = await withTenant(req.actor!.activeTenantId!, async (db) => {
-          const r = await db.query(
-            `SELECT tenant_id, balance_minor, currency, version FROM usage_accounts WHERE tenant_id = $1`,
-            [req.actor!.activeTenantId],
-          );
-          return r.rows[0] ?? null;
-        }, pool);
-        res.json({ data: account });
-      } catch (err) {
-        next(err);
-      }
-    },
-  );
-
   void assertOperation;
   return router;
 }

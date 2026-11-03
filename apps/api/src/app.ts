@@ -21,6 +21,12 @@ import { attendanceRoutes } from './routes/attendance.js';
 import { staffRoutes } from './routes/staff.js';
 import { importExportRoutes } from './routes/import-export.js';
 import { storageRoutes } from './routes/storage.js';
+import { documentsRoutes } from './routes/documents.js';
+import { invoicesRoutes } from './routes/invoices.js';
+import { paymentsRoutes } from './routes/payments.js';
+import { usageRoutes } from './routes/usage.js';
+import { messagesRoutes } from './routes/messages.js';
+import { webhookRoutes } from './routes/webhooks.js';
 import { disabledRoutes } from './routes/disabled.js';
 
 export function createApp(pool: DbPool, config: AppConfig) {
@@ -55,6 +61,12 @@ export function createApp(pool: DbPool, config: AppConfig) {
   v1.use(staffRoutes(pool));
   v1.use(importExportRoutes(pool));
   v1.use(storageRoutes(pool, config));
+  v1.use(documentsRoutes(pool));
+  v1.use(invoicesRoutes(pool));
+  v1.use(paymentsRoutes(pool, config));
+  v1.use(usageRoutes(pool, config));
+  v1.use(messagesRoutes(pool));
+  v1.use(webhookRoutes(pool, config));
   v1.use(disabledRoutes());
 
   app.use('/v1', v1);
