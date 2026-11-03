@@ -200,7 +200,7 @@ async function main() {
             token: `client_${clientA.rows[0]!.id}.${secret}`,
           },
           notes:
-            'Parent A linked only to Amelia Ash, not Ben Ash. Phase 1 seed includes morning session + staff rota (synthetic).',
+            'Parent A linked only to Amelia Ash, not Ben Ash. Phase 1 seed includes morning session + staff rota. Phase 2 APIs (documents/invoices/messages) available against synthetic tenants; no live Stripe/Twilio.',
         },
         null,
         2,

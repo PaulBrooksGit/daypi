@@ -1,2 +1,3 @@
-/** Module stub: documents — Phase 0 placeholder; writes owned here in later phases. */
-export {};
+/** DayDocs — versioned documents, consents, signature evidence. */
+export * from './documents.js';
+export * from './consents.js';

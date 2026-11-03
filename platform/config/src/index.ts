@@ -35,6 +35,9 @@ const envSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   UPLOAD_MAX_BYTES: z.coerce.number().int().positive().default(10_485_760),
   UPLOAD_ALLOWED_MIME: z.string().default('application/pdf,image/jpeg,image/png,text/plain'),
+  // Sandbox webhook HMAC secrets (empty = accept unsigned in local/test only)
+  STRIPE_WEBHOOK_SECRET: z.string().default(''),
+  TWILIO_WEBHOOK_SECRET: z.string().default(''),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 });
 
