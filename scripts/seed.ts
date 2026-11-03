@@ -140,6 +140,46 @@ async function main() {
       [tenantB.tenantId],
     );
 
+    // Phase 1 synthetic ops: session + staff rota for tenant A
+    await client.query("SELECT set_config('app.tenant_id', $1, true)", [tenantA.tenantId]);
+    const sessionDef = await client.query<{ id: string }>(
+      `INSERT INTO session_definitions (
+         tenant_id, site_id, name, local_start_time, local_end_time, default_capacity, timezone
+       ) VALUES ($1, $2, 'Morning', '09:00', '12:00', 4, 'Europe/London')
+       RETURNING id`,
+      [tenantA.tenantId, tenantA.siteId],
+    );
+    await client.query(
+      `INSERT INTO dated_sessions (
+         tenant_id, site_id, session_definition_id, session_date, starts_at, ends_at, capacity
+       ) VALUES (
+         $1, $2, $3, '2026-11-10',
+         ('2026-11-10'::date + time '09:00') AT TIME ZONE 'Europe/London',
+         ('2026-11-10'::date + time '12:00') AT TIME ZONE 'Europe/London',
+         4
+       )`,
+      [tenantA.tenantId, tenantA.siteId, sessionDef.rows[0]!.id],
+    );
+    const staff = await client.query<{ id: string }>(
+      `INSERT INTO staff_profiles (tenant_id, given_name, family_name, job_title)
+       VALUES ($1, 'Sam', 'Staff', 'practitioner') RETURNING id`,
+      [tenantA.tenantId],
+    );
+    await client.query(
+      `INSERT INTO staff_assignments (tenant_id, staff_profile_id, site_id, role_label)
+       VALUES ($1, $2, $3, 'practitioner')`,
+      [tenantA.tenantId, staff.rows[0]!.id, tenantA.siteId],
+    );
+    await client.query(
+      `INSERT INTO rota_shifts (tenant_id, staff_profile_id, site_id, starts_at, ends_at)
+       VALUES (
+         $1, $2, $3,
+         '2026-11-10T08:00:00Z',
+         '2026-11-10T13:00:00Z'
+       )`,
+      [tenantA.tenantId, staff.rows[0]!.id, tenantA.siteId],
+    );
+
     await client.query('COMMIT');
 
     console.info(
@@ -159,7 +199,8 @@ async function main() {
             id: clientA.rows[0]!.id,
             token: `client_${clientA.rows[0]!.id}.${secret}`,
           },
-          notes: 'Parent A linked only to Amelia Ash, not Ben Ash',
+          notes:
+            'Parent A linked only to Amelia Ash, not Ben Ash. Phase 1 seed includes morning session + staff rota (synthetic).',
         },
         null,
         2,

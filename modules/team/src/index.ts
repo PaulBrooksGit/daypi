@@ -1,2 +1,2 @@
-/** Module stub: team — Phase 0 placeholder; writes owned here in later phases. */
-export {};
+/** DayTeam — staff profiles, rota (planned), time events (actual). */
+export * from './staff.js';

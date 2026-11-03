@@ -2,7 +2,7 @@
   "name": "daypi",
   "version": "0.1.0",
   "private": true,
-  "description": "DayPI — API-first childcare operations platform (Phase 0 foundation)",
+  "description": "DayPI — API-first childcare operations platform (Phase 1 DayCore minimum)",
   "engines": {
     "node": ">=20"
   },

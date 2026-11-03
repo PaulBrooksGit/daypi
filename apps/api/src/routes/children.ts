@@ -9,6 +9,8 @@ import {
 import { withTenant } from '../../../../platform/db/src/index.js';
 import { writeAudit } from '../../../../platform/audit/src/index.js';
 import { notFound, forbidden } from '../../../../platform/http/src/errors.js';
+import { updateChild, archiveChild } from '../../../../modules/core/src/index.js';
+
 
 export function childrenRoutes(pool: DbPool): Router {
   const router = Router();
@@ -161,6 +163,68 @@ export function childrenRoutes(pool: DbPool): Router {
         }, pool);
 
         res.status(201).json({ data: created });
+      } catch (err) {
+        next(err);
+      }
+    },
+  );
+
+  router.patch(
+    '/children/:childId',
+    requireAuth,
+    requireActiveTenant,
+    requireOperation('children.update'),
+    async (req, res, next) => {
+      try {
+        const body = z
+          .object({
+            given_name: z.string().min(1).max(100).optional(),
+            family_name: z.string().min(1).max(100).optional(),
+            preferred_name: z.string().max(100).nullable().optional(),
+            enrolment_status: z
+              .enum(['lead', 'waiting', 'active', 'graduated', 'withdrawn'])
+              .optional(),
+            version: z.number().int().positive().optional(),
+          })
+          .parse(req.body);
+        const updated = await updateChild(
+          {
+            tenantId: req.actor!.activeTenantId!,
+            actorUserId: req.actor!.userId,
+            childId: req.params.childId!,
+            givenName: body.given_name,
+            familyName: body.family_name,
+            preferredName: body.preferred_name,
+            enrolmentStatus: body.enrolment_status,
+            expectedVersion: body.version,
+            correlationId: req.correlationId,
+          },
+          pool,
+        );
+        res.json({ data: updated });
+      } catch (err) {
+        next(err);
+      }
+    },
+  );
+
+  router.post(
+    '/children/:childId/archive',
+    requireAuth,
+    requireActiveTenant,
+    requireOperation('children.archive'),
+    async (req, res, next) => {
+      try {
+        const archived = await archiveChild(
+          {
+            tenantId: req.actor!.activeTenantId!,
+            actorUserId: req.actor!.userId,
+            childId: req.params.childId!,
+            correlationId: req.correlationId,
+          },
+          pool,
+        );
+        res.json({ data: archived });
       } catch (err) {
         next(err);
       }
