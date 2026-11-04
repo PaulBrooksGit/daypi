@@ -1,7 +1,10 @@
+import { config as loadEnv } from '../../../tests/load-env.js';
 import { loadConfig } from '../../../platform/config/src/index.js';
 import { createPool, withTenant } from '../../../platform/db/src/index.js';
 import { OutboxWorker } from '../../../platform/jobs/src/index.js';
 import { sendMessageInTx } from '../../../modules/messaging/src/index.js';
+
+loadEnv();
 
 async function main() {
   const config = loadConfig();

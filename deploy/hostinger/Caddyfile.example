@@ -1,0 +1,12 @@
+# Example Caddy reverse proxy for DayPI API on Hostinger VPS.
+# Replace api.example.invalid with the pending verified hostname (D02).
+
+api.example.invalid {
+	encode gzip
+	reverse_proxy 127.0.0.1:3001
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}

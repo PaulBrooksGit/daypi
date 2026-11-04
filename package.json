@@ -2,7 +2,7 @@
   "name": "daypi",
   "version": "0.1.0",
   "private": true,
-  "description": "DayPI — API-first childcare operations platform (Phase 3 supporting services)",
+  "description": "DayPI — API-first childcare operations platform (Hostinger pilot prep)",
   "engines": {
     "node": ">=20"
   },
@@ -16,6 +16,7 @@
     "migrate": "tsx scripts/migrate.ts",
     "migrate:test": "tsx scripts/migrate.ts --database-url-env TEST_DATABASE_URL",
     "seed": "tsx scripts/seed.ts",
+    "smoke:pilot": "tsx scripts/pilot-smoke.ts",
     "dev:api": "tsx watch apps/api/src/index.ts",
     "dev:worker": "tsx watch apps/worker/src/index.ts",
     "start:api": "node dist/apps/api/src/index.js",

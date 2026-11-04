@@ -1,0 +1,89 @@
+# Local / throwaway VPS rehearsal for Hostinger pilot prep.
+# Synthetic data only. Does not log into Hostinger or enable live Stripe/Twilio.
+#
+#   docker compose -f deploy/hostinger/docker-compose.yml up -d --build
+#   BASE_URL=http://127.0.0.1:3001 npm run smoke:pilot
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - daypi_pg:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build:
+      context: ../..
+      dockerfile: deploy/hostinger/Dockerfile
+    env_file:
+      - ./compose.env
+    environment:
+      DATABASE_URL: postgresql://daypi_app:daypi_app_dev@postgres:5432/daypi
+      MIGRATION_DATABASE_URL: postgresql://daypi_migrator:daypi_migrator_dev@postgres:5432/daypi
+    command: ['npm', 'run', 'migrate']
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  seed:
+    build:
+      context: ../..
+      dockerfile: deploy/hostinger/Dockerfile
+    env_file:
+      - ./compose.env
+    environment:
+      DATABASE_URL: postgresql://daypi_app:daypi_app_dev@postgres:5432/daypi
+      MIGRATION_DATABASE_URL: postgresql://daypi_migrator:daypi_migrator_dev@postgres:5432/daypi
+    command: ['npm', 'run', 'seed']
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  api:
+    build:
+      context: ../..
+      dockerfile: deploy/hostinger/Dockerfile
+    env_file:
+      - ./compose.env
+    environment:
+      DATABASE_URL: postgresql://daypi_app:daypi_app_dev@postgres:5432/daypi
+      MIGRATION_DATABASE_URL: postgresql://daypi_migrator:daypi_migrator_dev@postgres:5432/daypi
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      PORT: '3001'
+    command: ['npm', 'run', 'start:api']
+    ports:
+      - '3001:3001'
+    volumes:
+      - daypi_storage:/app/.data/storage
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: deploy/hostinger/Dockerfile
+    env_file:
+      - ./compose.env
+    environment:
+      DATABASE_URL: postgresql://daypi_app:daypi_app_dev@postgres:5432/daypi
+      MIGRATION_DATABASE_URL: postgresql://daypi_migrator:daypi_migrator_dev@postgres:5432/daypi
+    command: ['npm', 'run', 'start:worker']
+    volumes:
+      - daypi_storage:/app/.data/storage
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+
+volumes:
+  daypi_pg:
+  daypi_storage:

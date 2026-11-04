@@ -69,6 +69,15 @@ npm test
 
 CI runs typecheck, lint, unit + integration tests against Postgres 16.
 
-## Hostinger
+## Hostinger pilot prep
 
-Planned production host later — **not configured**.
+Production target preference is Hostinger (UK-friendly VPS / Node). This repo ships a **deploy pack** and synthetic **pilot smoke** — not live Stripe/Twilio, not Phase 4 commerce, and not Hostinger account login.
+
+| Doc / artefact | Path |
+| --- | --- |
+| Deploy pack | [`docs/ops/hostinger-deploy.md`](docs/ops/hostinger-deploy.md) |
+| Pilot smoke | [`docs/ops/pilot-smoke.md`](docs/ops/pilot-smoke.md) · `npm run smoke:pilot` |
+| D01 / D11 notes (Pending) | [`docs/ops/d01-england-ofsted-notes.md`](docs/ops/d01-england-ofsted-notes.md), [`docs/ops/d11-uk-region-retention-notes.md`](docs/ops/d11-uk-region-retention-notes.md) |
+| Compose rehearsal | [`deploy/hostinger/docker-compose.yml`](deploy/hostinger/docker-compose.yml) |
+
+Redis is **not** required today (Postgres outbox). Keep all `FEATURE_*` live flags false for pilot.
