@@ -27,6 +27,12 @@ import { paymentsRoutes } from './routes/payments.js';
 import { usageRoutes } from './routes/usage.js';
 import { messagesRoutes } from './routes/messages.js';
 import { webhookRoutes } from './routes/webhooks.js';
+import { websitesRoutes } from './routes/websites.js';
+import { aiRoutes } from './routes/ai.js';
+import { qualityRoutes } from './routes/quality.js';
+import { healthRecordsRoutes } from './routes/health-records.js';
+import { tripsRoutes } from './routes/trips.js';
+import { facilitiesRoutes } from './routes/facilities.js';
 import { disabledRoutes } from './routes/disabled.js';
 
 export function createApp(pool: DbPool, config: AppConfig) {
@@ -67,6 +73,12 @@ export function createApp(pool: DbPool, config: AppConfig) {
   v1.use(usageRoutes(pool, config));
   v1.use(messagesRoutes(pool));
   v1.use(webhookRoutes(pool, config));
+  v1.use(websitesRoutes(pool));
+  v1.use(aiRoutes(pool));
+  v1.use(qualityRoutes(pool));
+  v1.use(healthRecordsRoutes(pool));
+  v1.use(tripsRoutes(pool));
+  v1.use(facilitiesRoutes(pool));
   v1.use(disabledRoutes());
 
   app.use('/v1', v1);

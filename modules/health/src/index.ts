@@ -1,2 +1,2 @@
-/** Module stub: health — Phase 0 placeholder; writes owned here in later phases. */
-export {};
+/** DayGrow — health/development records; allergy unknown vs confirmed. */
+export * from './health.js';

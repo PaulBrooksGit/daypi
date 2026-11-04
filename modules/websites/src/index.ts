@@ -1,2 +1,2 @@
-/** Module stub: websites — Phase 0 placeholder; writes owned here in later phases. */
-export {};
+/** DayMain — website CMS foundations: templates, draft/publish, domain stub. */
+export * from './websites.js';

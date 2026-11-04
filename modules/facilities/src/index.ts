@@ -1,2 +1,2 @@
-/** Module stub: facilities — Phase 0 placeholder; writes owned here in later phases. */
-export {};
+/** DayCare — premises/equipment assets, inspections, findings, maintenance. */
+export * from './facilities.js';
