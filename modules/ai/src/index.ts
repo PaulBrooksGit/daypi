@@ -1,2 +1,2 @@
-/** Module stub: ai — Phase 0 placeholder; writes owned here in later phases. */
-export {};
+/** DayMake — constrained AI drafts; consequential execution disabled (D07). */
+export * from './drafts.js';

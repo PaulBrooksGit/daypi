@@ -1,13 +1,14 @@
 openapi: 3.1.0
 info:
   title: DayPI API
-  version: 0.3.0-phase2
+  version: 0.4.0-phase3
   description: >
-    Phase 0–2 implemented surfaces: foundation, DayCore/DayByte/DayTeam minimum,
-    DayDocs, core DayBank (sandbox payments), and DayText. Commercial and
+    Phase 0–3 implemented surfaces: foundation, DayCore/DayByte/DayTeam minimum,
+    DayDocs, core DayBank (sandbox payments), DayText, and Phase 3 supporting
+    services (DayMain, DayMake, DayStar, DayGrow, DayStep, DayCare). Commercial and
     regulatory behaviours gated by D01–D12 remain disabled or synthetic-only.
     No live Stripe Connect collection, auctions, payroll, consequential AI,
-    or Hostinger configuration.
+    background GPS, or Hostinger configuration.
 servers:
   - url: http://localhost:3001/v1
     description: Local API (final hostname Pending D02)
@@ -33,6 +34,12 @@ tags:
   - name: Usage
   - name: Messages
   - name: Webhooks
+  - name: Websites
+  - name: AI
+  - name: Quality
+  - name: Health
+  - name: Trips
+  - name: Facilities
 security:
   - bearerAuth: []
   - sessionCookie: []
@@ -774,6 +781,515 @@ paths:
       responses:
         '200':
           description: Events
+  /website-templates:
+    get:
+      tags: [Websites]
+      summary: List DayMain template catalogue (ten templates)
+      responses:
+        '200':
+          description: Active templates
+  /websites:
+    get:
+      tags: [Websites]
+      summary: List tenant website sites
+      responses:
+        '200':
+          description: Website sites
+    post:
+      tags: [Websites]
+      summary: Create draft website site from template
+      responses:
+        '201':
+          description: Created
+  /websites/{id}/publish:
+    post:
+      tags: [Websites]
+      summary: Publish website site
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Published
+  /websites/{id}/pages:
+    post:
+      tags: [Websites]
+      summary: Create draft page
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Created
+  /website-pages/{id}:
+    get:
+      tags: [Websites]
+      summary: Get website page
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Page
+    patch:
+      tags: [Websites]
+      summary: Update draft page content
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updated
+  /website-pages/{id}/publish:
+    post:
+      tags: [Websites]
+      summary: Publish page (snapshot body)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Published
+  /websites/{id}/domains:
+    post:
+      tags: [Websites]
+      summary: Request custom domain verification (stub; no Hostinger)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Verification pending
+  /website-domain-verifications/{id}/complete-stub:
+    post:
+      tags: [Websites]
+      summary: Complete domain verification stub (sandbox only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: verified_stub
+  /ai/drafts:
+    get:
+      tags: [AI]
+      summary: List DayMake drafts
+      responses:
+        '200':
+          description: Drafts
+    post:
+      tags: [AI]
+      summary: Create synthetic unpublished AI draft
+      responses:
+        '201':
+          description: Created
+  /ai/drafts/{id}:
+    get:
+      tags: [AI]
+      summary: Get AI draft
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Draft
+    patch:
+      tags: [AI]
+      summary: Edit AI draft before publish
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updated
+  /ai/drafts/{id}/approve:
+    post:
+      tags: [AI]
+      summary: Approve draft as unpublished
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: approved_unpublished
+  /ai/drafts/{id}/reject:
+    post:
+      tags: [AI]
+      summary: Reject AI draft
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Rejected
+  /ai/orchestrator:
+    post:
+      tags: [AI]
+      summary: Propose typed action; consequential types blocked (D07)
+      responses:
+        '201':
+          description: Proposal
+  /ai/proposals/{id}:
+    get:
+      tags: [AI]
+      summary: Get AI proposal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Proposal
+  /ai/proposals/{id}/approve:
+    post:
+      tags: [AI]
+      summary: Approve draft-only proposal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: approved_draft_only
+  /ai/proposals/{id}/reject:
+    post:
+      tags: [AI]
+      summary: Reject proposal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Rejected
+  /ai/proposals/{id}/execute:
+    post:
+      tags: [AI]
+      summary: Consequential execute — always FEATURE_DISABLED (D07)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '403':
+          description: Feature disabled
+  /quality/templates:
+    post:
+      tags: [Quality]
+      summary: Create versioned audit template
+      responses:
+        '201':
+          description: Created
+  /quality/audits:
+    post:
+      tags: [Quality]
+      summary: Start internal audit run
+      responses:
+        '201':
+          description: Created
+  /quality/audits/{id}/complete:
+    post:
+      tags: [Quality]
+      summary: Complete audit with internal-only score
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Completed
+  /quality/audits/{id}/actions:
+    post:
+      tags: [Quality]
+      summary: Add follow-up action
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Created
+  /testimonials:
+    get:
+      tags: [Quality]
+      summary: List testimonials (permission-filtered)
+      responses:
+        '200':
+          description: Testimonials
+    post:
+      tags: [Quality]
+      summary: Submit testimonial (pending moderation)
+      responses:
+        '201':
+          description: Created
+  /testimonials/{id}/moderate:
+    post:
+      tags: [Quality]
+      summary: Moderate testimonial visibility
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Moderated
+  /children/{childId}/allergies:
+    get:
+      tags: [Health]
+      summary: Allergy profile + items (unknown default; audited)
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Profile and allergies
+    post:
+      tags: [Health]
+      summary: Add allergy (never defaults to None)
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Created
+  /children/{childId}/allergy-profile:
+    post:
+      tags: [Health]
+      summary: Set overall allergy status (unknown|unconfirmed|confirmed_present|confirmed_none)
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updated
+  /children/{childId}/conditions:
+    post:
+      tags: [Health]
+      summary: Add health condition
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Created
+  /children/{childId}/care-plans:
+    post:
+      tags: [Health]
+      summary: Create care plan draft
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Created
+  /children/{childId}/observations:
+    post:
+      tags: [Health]
+      summary: Append observation (immutable)
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Created
+  /trips:
+    get:
+      tags: [Trips]
+      summary: List trips
+      responses:
+        '200':
+          description: Trips
+    post:
+      tags: [Trips]
+      summary: Create outing/trip
+      responses:
+        '201':
+          description: Created
+  /trips/{id}:
+    get:
+      tags: [Trips]
+      summary: Get trip
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Trip
+  /trips/{id}/participants:
+    post:
+      tags: [Trips]
+      summary: Add participant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Created
+  /trips/{id}/permissions:
+    post:
+      tags: [Trips]
+      summary: Request guardian trip permission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Pending
+  /trip-permissions/{id}/respond:
+    post:
+      tags: [Trips]
+      summary: Guardian respond to trip permission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Responded
+  /trips/{id}/headcounts:
+    post:
+      tags: [Trips]
+      summary: Record physical headcount
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Recorded
+  /trips/{id}/location-samples:
+    get:
+      tags: [Trips]
+      summary: List online location samples (point-in-time)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Samples
+    post:
+      tags: [Trips]
+      summary: Record online-only location sample (no background GPS)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Sample
+  /trips/{id}/location/live:
+    post:
+      tags: [Trips]
+      summary: Live GPS stream — FEATURE_DISABLED (D08)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '403':
+          description: Feature disabled
+  /facilities/assets:
+    get:
+      tags: [Facilities]
+      summary: List premises/equipment assets
+      responses:
+        '200':
+          description: Assets
+    post:
+      tags: [Facilities]
+      summary: Create asset
+      responses:
+        '201':
+          description: Created
+  /facilities/assets/{id}/schedules:
+    post:
+      tags: [Facilities]
+      summary: Create inspection schedule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Created
+  /facilities/assets/{id}/inspections:
+    post:
+      tags: [Facilities]
+      summary: Record inspection with optional findings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Recorded
+  /facilities/assets/{id}/maintenance-actions:
+    post:
+      tags: [Facilities]
+      summary: Create maintenance action
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Created
 components:
   parameters:
     IdempotencyKey:

@@ -5,10 +5,6 @@ import { featureDisabled } from '../../../../platform/http/src/errors.js';
 export function disabledRoutes(): Router {
   const router = Router();
 
-  router.all('/ai/proposals/:id/execute', (_req, _res, next) => {
-    next(featureDisabled('ai.execute_consequential'));
-  });
-
   router.all('/payments/collect', (_req, _res, next) => {
     next(featureDisabled('payments.collect_live'));
   });

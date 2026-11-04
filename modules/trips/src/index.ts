@@ -1,2 +1,2 @@
-/** Module stub: trips — Phase 0 placeholder; writes owned here in later phases. */
-export {};
+/** DayStep — trips/outings: permissions, headcounts; online location only (D08). */
+export * from './trips.js';
