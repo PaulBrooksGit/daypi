@@ -105,18 +105,8 @@ export function authRoutes(pool: DbPool, config: AppConfig): Router {
 
   router.get('/auth/me', requireAuth, async (req, res, next) => {
     try {
-      const memberships = await pool.query(
-        `SELECT m.id, m.tenant_id, m.role_template, m.status, t.display_name
-         FROM memberships m
-         JOIN tenants t ON t.id = m.tenant_id
-         WHERE m.user_id = $1 AND m.status = 'active'
-         ORDER BY t.display_name`,
-        [req.actor!.userId],
-      );
-      // memberships is RLS-protected — this query on bare pool will return ZERO rows!
-      // Need a SECURITY DEFINER function OR disable RLS for memberships SELECT by user_id.
-      // Fix: migration helper list_memberships_for_user.
-      void memberships;
+      // memberships is RLS-protected; never query it without tenant context.
+      // list_memberships_for_user is SECURITY DEFINER (owner bypass; see migration 028).
       const listed = await pool.query(
         `SELECT * FROM list_memberships_for_user($1)`,
         [req.actor!.userId],

@@ -1,0 +1,17 @@
+[Unit]
+Description=DayPI API
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=daypi
+WorkingDirectory=/opt/daypi/app
+EnvironmentFile=/opt/daypi/.env
+ExecStart=/usr/bin/npm run start:api
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

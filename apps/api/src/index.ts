@@ -1,6 +1,9 @@
+import { config as loadEnv } from '../../../tests/load-env.js';
 import { loadConfig } from '../../../platform/config/src/index.js';
 import { createPool } from '../../../platform/db/src/index.js';
 import { createApp } from './app.js';
+
+loadEnv();
 
 async function main() {
   const config = loadConfig();
